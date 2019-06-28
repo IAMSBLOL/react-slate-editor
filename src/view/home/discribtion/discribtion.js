@@ -4,12 +4,13 @@ import * as homeAction from '../../../action/globalAction'
 import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
+import Editor from '../slate'
 
 class Discribtion extends Component {
     render () {
         return (
             <div styleName='discribtion' className='discribtion'>
-                discribtiona
+                <Editor />
             </div>
         );
     }

@@ -25,7 +25,7 @@ const ForkTsCheckerWebpackPlugin = require('react-dev-utils/ForkTsCheckerWebpack
 const typescriptFormatter = require('react-dev-utils/typescriptFormatter');
 const StyleLintPlugin = require('stylelint-webpack-plugin');
 // 拷贝静态资源
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+// const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
@@ -512,12 +512,12 @@ module.exports = function (webpackEnv) {
             ],
         },
         plugins: [
-            new CopyWebpackPlugin([
-                {
-                    from: path.join(paths.appSrc, 'view/home/resume/canvas.js'),
-                    to: './public'
-                },
-            ]),
+            // new CopyWebpackPlugin([
+            //     {
+            //         from: path.join(paths.appSrc, 'view/home/resume/canvas.js'),
+            //         to: './public'
+            //     },
+            // ]),
             // Generates an `index.html` file with the <script> injected.
             new HtmlWebpackPlugin(
                 Object.assign(

@@ -6,18 +6,10 @@ import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 
 class Discribtion extends Component {
-    componentDidMount () {
-        const { homeAction } = this.props
-        homeAction.TEST('hahahaha')
-        homeAction.SAGATEST('saga是否接收', 'REQ')
-    }
     render () {
-        const { home, saga } = this.props
         return (
             <div styleName='discribtion' className='discribtion'>
                 discribtiona
-                {home}
-                {saga}
             </div>
         );
     }

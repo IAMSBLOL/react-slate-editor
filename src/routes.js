@@ -13,23 +13,7 @@ import loadable from '@loadable/component'
 const routes = [
     {
         path: '/',
-        component: loadable(() => import('./view/home/layout'), {
-            fallback: 'Loading',
-        }),
-        routes: [
-            {
-                path: '/home/resume',
-                component: loadable(() => import('./view/home/resume')),
-            },
-            {
-                path: '/home/discribtion',
-                component: loadable(() => import('./view/home/discribtion')),
-            }
-        ]
-    },
-    {
-        path: '/project',
-        component: loadable(() => import('./view/project/layout'))
+        component: loadable(() => import('./view/home/discribtion')),
     }
 ]
 

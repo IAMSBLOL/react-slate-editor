@@ -25,7 +25,7 @@ const ForkTsCheckerWebpackPlugin = require('react-dev-utils/ForkTsCheckerWebpack
 const typescriptFormatter = require('react-dev-utils/typescriptFormatter');
 const StyleLintPlugin = require('stylelint-webpack-plugin');
 // 拷贝静态资源
-// const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 // Source maps are resource heavy and can cause out of memory issue for large source files.
 const shouldUseSourceMap = process.env.GENERATE_SOURCEMAP !== 'false';
@@ -43,6 +43,11 @@ const sassRegex = /\.(scss|sass)$/;
 const sassModuleRegex = /\.module\.(scss|sass)$/;
 const ANTD_ICONFONTS_PATH = 'src/public/fonts/antd/iconfont';
 const ANTD_ICONFONTS = process.env.ANTD_ICONFONTS || (path.posix || path).join('/', ANTD_ICONFONTS_PATH);
+const fontsLoaderOptions = {
+    prefix: 'fonts/',
+    name: '[path][name].[ext]',
+    limit: 10000
+}
 
 // This is the production and development configuration.
 // It is focused on developer experience, fast rebuilds, and a minimal bundle.
@@ -507,6 +512,7 @@ module.exports = function (webpackEnv) {
                                 name: 'static/media/[name].[hash:8].[ext]',
                             },
                         },
+                        { test: /\.woff2(\?.*)?$/, loader: 'url-loader', options: Object.assign({}, fontsLoaderOptions, { mimetype: 'application/font-woff2' }) },
                     ],
                 },
             ],
@@ -514,7 +520,7 @@ module.exports = function (webpackEnv) {
         plugins: [
             // new CopyWebpackPlugin([
             //     {
-            //         from: path.join(paths.appSrc, 'view/home/resume/canvas.js'),
+            //         from: path.join(paths.appPublic, 'font/slateToolBar.woff2'),
             //         to: './public'
             //     },
             // ]),

@@ -10,7 +10,7 @@ class Discribtion extends Component {
     render () {
         return (
             <div styleName='discribtion' className='discribtion'>
-                <Editor />
+                <div className='container'><Editor /></div>
             </div>
         );
     }

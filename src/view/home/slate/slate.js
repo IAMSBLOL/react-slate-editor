@@ -1,13 +1,35 @@
-import { Editor } from 'slate-react'
-import { Value } from 'slate'
-
+import { Editor, getEventTransfer } from 'slate-react'
+import { Value, Block } from 'slate'
+import { css } from 'emotion'
 import React from 'react'
+import './font.css'
 import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
-import { Button, Icon, Toolbar } from '../components'
+import isUrl from 'is-url'
+import imageExtensions from 'image-extensions'
+import { Button, Icon, Toolbar } from './components'
+import PlaceholderPlugin from 'slate-react-placeholder'
 
+function isImage (url) {
+    return imageExtensions.includes(getExtension(url))
+}
+
+function getExtension (url) {
+    return new URL(url).pathname.split('.').pop()
+}
+
+function insertImage (editor, src, target) {
+    if (target) {
+        editor.select(target)
+    }
+
+    editor.insertBlock({
+        type: 'image',
+        data: { src },
+    })
+}
 /**
- * Define the default node type.
+ * 定义默认 node type.
  *
  * @type {String}
  */
@@ -15,7 +37,29 @@ import { Button, Icon, Toolbar } from '../components'
 const DEFAULT_NODE = 'paragraph'
 
 /**
- * Define hotkey matchers.
+ * 操蛋的模块自定义
+ */
+
+const schema = {
+    document: {
+        last: { type: 'paragraph' },
+        normalize: (editor, { code, node, child }) => {
+            switch (code) {
+                case 'last_child_type_invalid': {
+                    const paragraph = Block.create('paragraph')
+                    return editor.insertNodeByKey(node.key, node.nodes.size, paragraph)
+                }
+            }
+        },
+    },
+    blocks: {
+        image: {
+            isVoid: true,
+        },
+    },
+}
+
+/**
  *
  * @type {Function}
  */
@@ -26,14 +70,13 @@ const isUnderlinedHotkey = isKeyHotkey('mod+u')
 const isCodeHotkey = isKeyHotkey('mod+`')
 
 /**
- * The rich text example.
  *
  * @type {Component}
  */
 
 class RichTextExample extends React.Component {
     /**
-   * Deserialize the initial editor value.
+   * 解析数据.后面处理html形式
    *
    * @type {Object}
    */
@@ -42,8 +85,21 @@ class RichTextExample extends React.Component {
       value: Value.fromJSON(initialValue),
   }
 
+  plugins = [
+      {
+          queries: {
+              isEmpty: editor => editor.value.document.text === '',
+          },
+      },
+      PlaceholderPlugin({
+          placeholder: '请输入点东西!',
+          when: 'isEmpty',
+          style: { color: '#999', opacity: '1', fontFamily: 'monospace' },
+      }),
+  ]
+
   /**
-   * Check if the current selection has a mark with `type` in it.
+   * 是否mark `type`.
    *
    * @param {String} type
    * @return {Boolean}
@@ -55,7 +111,7 @@ class RichTextExample extends React.Component {
   }
 
   /**
-   * Check if the any of the currently selected blocks are of `type`.
+   * 是否 block `type`.
    *
    * @param {String} type
    * @return {Boolean}
@@ -67,7 +123,7 @@ class RichTextExample extends React.Component {
   }
 
   /**
-   * Store a reference to the `editor`.
+   *  `editor`.
    *
    * @param {Editor} editor
    */
@@ -84,42 +140,61 @@ class RichTextExample extends React.Component {
 
   render () {
       return (
-          <div>
+          <div className='slate-cjfed' styleName='slate-cjfed'>
               <Toolbar>
-                  {this.renderMarkButton('bold', 'format_bold')}
-                  {this.renderMarkButton('italic', 'format_italic')}
-                  {this.renderMarkButton('underlined', 'format_underlined')}
-                  {this.renderMarkButton('code', 'code')}
-                  {this.renderBlockButton('heading-one', 'looks_one')}
-                  {this.renderBlockButton('heading-two', 'looks_two')}
-                  {this.renderBlockButton('block-quote', 'format_quote')}
-                  {this.renderBlockButton('numbered-list', 'format_list_numbered')}
-                  {this.renderBlockButton('bulleted-list', 'format_list_bulleted')}
+                  {this.renderHistoryButton('undo', 'undo', '上一步', this.onClickUndo)}
+                  {this.renderHistoryButton('redo', 'redo', '下一步', this.onClickRedo)}
+                  {this.renderMarkButton('bold', 'format_bold', '加粗')}
+                  {this.renderMarkButton('italic', 'format_italic', '斜体')}
+                  {this.renderMarkButton('underlined', 'format_underlined', '下划线')}
+                  {this.renderMarkButton('code', 'code', '代码')}
+                  {this.renderBlockButton('heading-one', 'looks_one', '标题1')}
+                  {this.renderBlockButton('heading-two', 'looks_two', '标题2')}
+                  {this.renderBlockButton('block-quote', 'format_quote', '块')}
+                  {this.renderBlockButton('numbered-list', 'format_list_numbered', '有序列表')}
+                  {this.renderBlockButton('bulleted-list', 'format_list_bulleted', '无序列表')}
               </Toolbar>
               <Editor
                 spellCheck
                 autoFocus
-                placeholder='Enter some rich text...'
                 ref={this.ref}
                 value={this.state.value}
                 onChange={this.onChange}
                 onKeyDown={this.onKeyDown}
                 renderBlock={this.renderBlock}
                 renderMark={this.renderMark}
+                onDrop={this.onDropOrPaste}
+                onPaste={this.onDropOrPaste}
+                schema={schema}
+                plugins={this.plugins}
               />
           </div>
       )
   }
 
   /**
-   * Render a mark-toggling toolbar button.
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @param {Any} remarks （）
+   * @return {Element}
+   */
+  renderHistoryButton=(type, icon, remarks, bindClick) => {
+      return (
+          <Button onMouseDown={bindClick}>
+              <Icon remarks={remarks}>{icon}</Icon>
+          </Button>
+      )
+  }
+
+  /**
    *
    * @param {String} type
    * @param {String} icon
    * @return {Element}
    */
 
-  renderMarkButton = (type, icon) => {
+  renderMarkButton = (type, icon, remarks) => {
       const isActive = this.hasMark(type)
 
       return (
@@ -127,20 +202,20 @@ class RichTextExample extends React.Component {
             active={isActive}
             onMouseDown={event => this.onClickMark(event, type)}
           >
-              <Icon>{icon}</Icon>
+              <Icon remarks={remarks}>{icon}</Icon>
           </Button>
       )
   }
 
   /**
-   * Render a block-toggling toolbar button.
+   * Render 转换段落按钮
    *
    * @param {String} type
    * @param {String} icon
    * @return {Element}
    */
 
-  renderBlockButton = (type, icon) => {
+  renderBlockButton = (type, icon, remarks) => {
       let isActive = this.hasBlock(type)
 
       if (['numbered-list', 'bulleted-list'].includes(type)) {
@@ -157,20 +232,20 @@ class RichTextExample extends React.Component {
             active={isActive}
             onMouseDown={event => this.onClickBlock(event, type)}
           >
-              <Icon>{icon}</Icon>
+              <Icon remarks={remarks}>{icon}</Icon>
           </Button>
       )
   }
 
   /**
-   * Render a Slate block.
+   * Render 处理slate格式.一整块
    *
    * @param {Object} props
    * @return {Element}
    */
 
   renderBlock = (props, editor, next) => {
-      const { attributes, children, node } = props
+      const { attributes, children, node, isFocused } = props
 
       switch (node.type) {
           case 'block-quote':
@@ -185,13 +260,28 @@ class RichTextExample extends React.Component {
               return <li {...attributes}>{children}</li>
           case 'numbered-list':
               return <ol {...attributes}>{children}</ol>
+          case 'image': {
+              const src = node.data.get('src')
+              return (
+                  <img
+                    {...attributes}
+                    src={src}
+                    className={css`
+                      display: block;
+                      max-width: 100%;
+                      max-height: 20em;
+                      box-shadow: ${isFocused ? '0 0 0 2px blue;' : 'none'};
+                    `}
+                  />
+              )
+          }
           default:
               return next()
       }
   }
 
   /**
-   * Render a Slate mark.
+   * Render Slate mark. 一小块的处理
    *
    * @param {Object} props
    * @return {Element}
@@ -215,7 +305,7 @@ class RichTextExample extends React.Component {
   }
 
   /**
-   * On change, save the new `value`.
+   * On change, 保存~~更新 `value`.
    *
    * @param {Editor} editor
    */
@@ -252,7 +342,7 @@ class RichTextExample extends React.Component {
   }
 
   /**
-   * When a mark button is clicked, toggle the current mark.
+   * 转换mark类型.
    *
    * @param {Event} event
    * @param {String} type
@@ -264,7 +354,7 @@ class RichTextExample extends React.Component {
   }
 
   /**
-   * When a block button is clicked, toggle the block type.
+   * 换block类型.
    *
    * @param {Event} event
    * @param {String} type
@@ -312,6 +402,60 @@ class RichTextExample extends React.Component {
               editor.setBlocks('list-item').wrapBlock(type)
           }
       }
+  }
+
+  /**
+   * 前一步 history.
+   *
+   */
+  onClickRedo = event => {
+      event.preventDefault()
+      this.editor.redo()
+  }
+
+  /**
+   * 后一步 history.
+   *
+   */
+
+  onClickUndo = event => {
+      event.preventDefault()
+      this.editor.undo()
+  }
+
+  /**
+   * 黏贴
+   */
+  onDropOrPaste = (event, editor, next) => {
+      const target = editor.findEventRange(event)
+      if (!target && event.type === 'drop') return next()
+
+      const transfer = getEventTransfer(event)
+      const { type, text, files } = transfer
+
+      if (type === 'files') {
+          for (const file of files) {
+              const reader = new FileReader()
+              const [mime] = file.type.split('/')
+              if (mime !== 'image') continue
+
+              reader.addEventListener('load', () => {
+                  editor.command(insertImage, reader.result, target)
+              })
+
+              reader.readAsDataURL(file)
+          }
+          return
+      }
+
+      if (type === 'text') {
+          if (!isUrl(text)) return next()
+          if (!isImage(text)) return next()
+          editor.command(insertImage, text, target)
+          return
+      }
+
+      next()
   }
 }
 

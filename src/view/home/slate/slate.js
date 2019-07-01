@@ -1,14 +1,19 @@
 import { Editor, getEventTransfer } from 'slate-react'
+import Html from 'slate-html-serializer'
 import { Value, Block } from 'slate'
 import { css } from 'emotion'
 import React from 'react'
 import './font.css'
+import { Upload } from 'antd'
 import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
 import isUrl from 'is-url'
 import imageExtensions from 'image-extensions'
 import { Button, Icon, Toolbar } from './components'
-import PlaceholderPlugin from 'slate-react-placeholder'
+import { RULES } from './slateHtmlSerializer'
+// import PlaceholderPlugin from 'slate-react-placeholder'
+
+const serializer = new Html({ rules: RULES })
 
 function isImage (url) {
     return imageExtensions.includes(getExtension(url))
@@ -91,11 +96,11 @@ class RichTextExample extends React.Component {
               isEmpty: editor => editor.value.document.text === '',
           },
       },
-      PlaceholderPlugin({
-          placeholder: '请输入点东西!',
-          when: 'isEmpty',
-          style: { color: '#999', opacity: '1', fontFamily: 'monospace' },
-      }),
+      //   PlaceholderPlugin({
+      //       placeholder: '请输入点东西!',
+      //       when: 'isEmpty',
+      //       style: { color: '#999', opacity: '1', fontFamily: 'monospace' },
+      //   }),
   ]
 
   /**
@@ -153,6 +158,7 @@ class RichTextExample extends React.Component {
                   {this.renderBlockButton('block-quote', 'format_quote', '块')}
                   {this.renderBlockButton('numbered-list', 'format_list_numbered', '有序列表')}
                   {this.renderBlockButton('bulleted-list', 'format_list_bulleted', '无序列表')}
+                  {this.renderImageButton('image', 'image', '图片')}
               </Toolbar>
               <Editor
                 spellCheck
@@ -166,6 +172,7 @@ class RichTextExample extends React.Component {
                 onDrop={this.onDropOrPaste}
                 onPaste={this.onDropOrPaste}
                 schema={schema}
+                placeholder='请输入点东西？'
                 plugins={this.plugins}
               />
           </div>
@@ -180,10 +187,31 @@ class RichTextExample extends React.Component {
    * @return {Element}
    */
   renderHistoryButton=(type, icon, remarks, bindClick) => {
+      const { value } = this.state
+      const { data } = value
+      const dos = remarks === 'undos' ? data.get('undos') : data.get('redos')
+      //   console.log(dos, 'caoniam')
       return (
-          <Button onMouseDown={bindClick}>
+          <Button onMouseDown={bindClick} active={dos && dos.size !== 0}>
               <Icon remarks={remarks}>{icon}</Icon>
           </Button>
+      )
+  }
+
+  /**
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+  renderImageButton=(type, icon, remarks) => {
+      return (
+          <Upload
+            onMouseDown={event => this.insertImage(event, type)}
+        >
+
+              <Icon remarks={remarks}>{icon}</Icon>
+          </Upload>
       )
   }
 
@@ -246,7 +274,7 @@ class RichTextExample extends React.Component {
 
   renderBlock = (props, editor, next) => {
       const { attributes, children, node, isFocused } = props
-
+      console.log(props, 254)
       switch (node.type) {
           case 'block-quote':
               return <blockquote {...attributes}>{children}</blockquote>
@@ -256,6 +284,12 @@ class RichTextExample extends React.Component {
               return <h1 {...attributes}>{children}</h1>
           case 'heading-two':
               return <h2 {...attributes}>{children}</h2>
+          case 'heading-three':
+              return <h3 {...attributes}>{children}</h3>
+          case 'heading-four':
+              return <h4 {...attributes}>{children}</h4>
+          case 'heading-five':
+              return <h5 {...attributes}>{children}</h5>
           case 'list-item':
               return <li {...attributes}>{children}</li>
           case 'numbered-list':
@@ -289,7 +323,7 @@ class RichTextExample extends React.Component {
 
   renderMark = (props, editor, next) => {
       const { children, mark, attributes } = props
-
+      console.log(props, 'props')
       switch (mark.type) {
           case 'bold':
               return <strong {...attributes}>{children}</strong>
@@ -311,6 +345,8 @@ class RichTextExample extends React.Component {
    */
 
   onChange = ({ value }) => {
+      const content = serializer.serialize(value.toJSON())
+      localStorage.setItem('content', content)
       this.setState({ value })
   }
 
@@ -455,7 +491,21 @@ class RichTextExample extends React.Component {
           return
       }
 
+      if (transfer.type === 'html') {
+          console.warn('t', transfer)
+          const { document } = serializer.deserialize(transfer.html)
+          editor.insertFragment(document)
+      }
+
       next()
+  }
+
+  /**
+   * insertImage
+   */
+
+  insertImage=() => {
+
   }
 }
 

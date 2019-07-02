@@ -1,16 +1,18 @@
 import { Editor, getEventTransfer } from 'slate-react'
 import Html from 'slate-html-serializer'
 import { Value, Block } from 'slate'
-import { css } from 'emotion'
+import { css, cx } from 'emotion'
 import React from 'react'
-import './font.css'
+import './slate.module.scss'
+// import './font.css'
 import { Upload } from 'antd'
 import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
 import isUrl from 'is-url'
 import imageExtensions from 'image-extensions'
-import { Button, Icon, Toolbar } from './components'
+import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontSzieNode } from './components'
 import { RULES } from './slateHtmlSerializer'
+import { TITLE_SIZE, FONT_SIZE } from './selectOption'
 // import PlaceholderPlugin from 'slate-react-placeholder'
 
 const serializer = new Html({ rules: RULES })
@@ -152,13 +154,18 @@ class RichTextExample extends React.Component {
                   {this.renderMarkButton('bold', 'format_bold', '加粗')}
                   {this.renderMarkButton('italic', 'format_italic', '斜体')}
                   {this.renderMarkButton('underlined', 'format_underlined', '下划线')}
-                  {this.renderMarkButton('code', 'code', '代码')}
-                  {this.renderBlockButton('heading-one', 'looks_one', '标题1')}
-                  {this.renderBlockButton('heading-two', 'looks_two', '标题2')}
-                  {this.renderBlockButton('block-quote', 'format_quote', '块')}
+                  {/* {this.renderMarkButton('code', 'code', '代码')} */}
+                  {/* {this.renderBlockButton('heading-one', 'looks_one', '标题1')}
+                  {this.renderBlockButton('heading-two', 'looks_two', '标题2')} */}
+                  {/* {this.renderBlockButton('block-quote', 'format_quote', '块')} */}
                   {this.renderBlockButton('numbered-list', 'format_list_numbered', '有序列表')}
                   {this.renderBlockButton('bulleted-list', 'format_list_bulleted', '无序列表')}
                   {this.renderImageButton('image', 'image', '图片')}
+                  {this.renderRTLButton('left', 'image', '居左')}
+                  {this.renderRTLButton('center', 'image', '居中')}
+                  {this.renderRTLButton('right', 'image', '居右')}
+                  {this.renderSelect('title', '标题号', this.setTitle, TITLE_SIZE)}
+                  {this.renderSelect('font-size', '字体大小', this.setFontSize, FONT_SIZE, 1)}
               </Toolbar>
               <Editor
                 spellCheck
@@ -169,6 +176,7 @@ class RichTextExample extends React.Component {
                 onKeyDown={this.onKeyDown}
                 renderBlock={this.renderBlock}
                 renderMark={this.renderMark}
+                renderNode={this.renderNode}
                 onDrop={this.onDropOrPaste}
                 onPaste={this.onDropOrPaste}
                 schema={schema}
@@ -176,6 +184,19 @@ class RichTextExample extends React.Component {
                 plugins={this.plugins}
               />
           </div>
+      )
+  }
+
+  /**
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @param {Any} remarks （）
+   * @return {Element}
+   */
+  renderSelect=(type, remarks, bindClick, data, index = 0) => {
+      return (
+          <SlateSelect remarks={remarks} onChange={bindClick} data={data} defaultValue={data[index]['key']} />
       )
   }
 
@@ -210,7 +231,9 @@ class RichTextExample extends React.Component {
             onMouseDown={event => this.insertImage(event, type)}
         >
 
-              <Icon remarks={remarks}>{icon}</Icon>
+              <Icon remarks={remarks} className={cx(
+                  css`cursor: pointer; color: ${'#ccc'};`
+              )} >{icon}</Icon>
           </Upload>
       )
   }
@@ -230,6 +253,26 @@ class RichTextExample extends React.Component {
             active={isActive}
             onMouseDown={event => this.onClickMark(event, type)}
           >
+              <Icon remarks={remarks}>{icon}</Icon>
+          </Button>
+      )
+  }
+
+  /**
+   *
+   * @param {String} type
+   * @param {String} icon
+   * @return {Element}
+   */
+
+  renderRTLButton = (type, icon, remarks) => {
+      const isActive = this.hasMark(type)
+
+      return (
+          <Button
+            active={isActive}
+            onMouseDown={event => this.onClickRTL(event, type)}
+            >
               <Icon remarks={remarks}>{icon}</Icon>
           </Button>
       )
@@ -294,6 +337,10 @@ class RichTextExample extends React.Component {
               return <li {...attributes}>{children}</li>
           case 'numbered-list':
               return <ol {...attributes}>{children}</ol>
+          case 'alignment':
+              return <AlignmentNode {...props} />
+          case 'font-size':
+              return <FontSzieNode {...props} />
           case 'image': {
               const src = node.data.get('src')
               return (
@@ -333,6 +380,8 @@ class RichTextExample extends React.Component {
               return <em {...attributes}>{children}</em>
           case 'underlined':
               return <u {...attributes}>{children}</u>
+          case 'font-size':
+              return <FontSzieMark {...props} />
           default:
               return next()
       }
@@ -345,8 +394,8 @@ class RichTextExample extends React.Component {
    */
 
   onChange = ({ value }) => {
-      const content = serializer.serialize(value.toJSON())
-      localStorage.setItem('content', content)
+      //   const content = serializer.serialize(value.toJSON())
+      //   localStorage.setItem('content', content)
       this.setState({ value })
   }
 
@@ -387,6 +436,24 @@ class RichTextExample extends React.Component {
   onClickMark = (event, type) => {
       event.preventDefault()
       this.editor.toggleMark(type)
+  }
+
+  /**
+   * 左右中系列~
+   * @param {Event} event
+   * @param {String} type
+   */
+  onClickRTL=(event, type) => {
+      event.preventDefault()
+      const { editor } = this
+      const { value } = editor
+      //   const isActive = this.hasBlock(type)
+      //   editor.setBlocks(isActive ? DEFAULT_NODE : type).wrapBlock(type)
+
+      editor.setBlocks({
+          type: 'alignment',
+          data: { align: type, currentBlockType: value.blocks.first().type }
+      }).focus()
   }
 
   /**
@@ -504,8 +571,44 @@ class RichTextExample extends React.Component {
    * insertImage
    */
 
-  insertImage=() => {
+  setTitle=(type) => {
+      //   e.preventDefault()
+      //   console.log(999, type)
+      //   console.log(TAG, 888)
+      const { editor } = this
+      editor.setBlocks(type).focus()
+  }
 
+  /**
+   * 设置字体mark
+   */
+  setFontSize=(size) => {
+      const { editor } = this
+      const { value } = editor
+      const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
+      const getFontMark = value.marks.filter(mark => mark.type === 'font-size').first()
+      const { selection } = value
+      console.log(selection, 'selection')
+
+      // 选中替换~~~自动替换的没开发出来
+      if (selection.isExpanded) {
+          if (hasFontMark) {
+              editor
+                  .removeMark(getFontMark)
+                  .addMark({
+                      type: 'font-size',
+                      data: { size },
+                  }).focus()
+          } else {
+              editor
+                  .addMark({
+                      type: 'font-size',
+                      data: { size },
+                  }).focus()
+          }
+      } else {
+          console.info('库里吉娃阿里嘎多')
+      }
   }
 }
 

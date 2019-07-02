@@ -1,7 +1,10 @@
 import React from 'react'
 import { cx, css } from 'emotion'
+import * as R from 'ramda'
 import PropTypes from 'prop-types';
-import { Popover } from 'antd'
+import { Popover, Select } from 'antd'
+
+const { Option } = Select;
 
 export const Button = React.forwardRef(
     ({ className, active, reversed, ...props }, ref) => (
@@ -20,6 +23,38 @@ Button.propTypes = {
     className: PropTypes.any,
     active: PropTypes.any,
     reversed: PropTypes.any,
+}
+
+export const SlateSelect = React.forwardRef(
+    ({ remarks, data, defaultValue, ...props }, ref) => (
+        <Popover content={remarks} title=''>
+            <Select
+              {...props}
+              ref={ref}
+              defaultValue={defaultValue}
+              dropdownMatchSelectWidth={false}
+              className={cx(
+                  css`cursor: pointer; color: #ccc;width:48px;`
+              )}
+            >
+
+                {
+                    R.map((o, i) => {
+                        return (
+                            <Option key={o.key} >{o.title}</Option>
+                        )
+                    }, data)
+                }
+            </Select>
+        </Popover>
+    )
+)
+
+SlateSelect.propTypes = {
+    className: PropTypes.any,
+    data: PropTypes.any,
+    remarks: PropTypes.any,
+    defaultValue: PropTypes.any,
 }
 
 /**
@@ -157,4 +192,69 @@ export const Toolbar = React.forwardRef(({ className, ...props }, ref) => (
 
 Toolbar.propTypes = {
     className: PropTypes.any,
+}
+
+/**
+ * ------------------------------------------------
+ *
+ */
+
+export const AlignmentNode = (props) => {
+    const { children, node: { data } } = props
+    let Node = 'div'
+    if (data.get('currentBlockType') === 'grid-cell') Node = 'td'
+    // console.log(props, '999')
+    return (
+        <Node style={{ textAlign: `${data.get('align')}` }}>
+            {children}
+        </Node>
+    )
+}
+
+AlignmentNode.propTypes = {
+    children: PropTypes.any,
+    node: PropTypes.any,
+}
+
+/**
+ * ------------------------------------------------
+ *
+ */
+
+export const FontSzieMark = (props) => {
+    const { children, mark: { data } } = props
+    // console.log(props, 111)
+    return (
+        <span
+          style={{
+              fontSize: parseInt(data.get('size'), 10),
+              //   verticalAlign: 'middle'
+          }}
+      >
+            {children}
+        </span>
+    )
+}
+
+FontSzieMark.propTypes = {
+    children: PropTypes.any,
+    mark: PropTypes.any,
+
+}
+
+export const FontSzieNode = (props) => {
+    const { children, node: { data } } = props
+    let Node = 'span'
+    // if (data.get('currentBlockType') === 'grid-cell') Node = 'td'
+    console.log(props, '249')
+    return (
+        <Node style={{ textAlign: `${data.get('size')}` }}>
+            {children}
+        </Node>
+    )
+}
+
+FontSzieNode.propTypes = {
+    children: PropTypes.any,
+    node: PropTypes.any,
 }

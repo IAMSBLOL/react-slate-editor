@@ -608,6 +608,10 @@ class RichTextExample extends React.Component {
           }
       } else {
           console.info('库里吉娃阿里嘎多')
+          editor.setBlocks({
+              type: 'font-size',
+              data: { size },
+          })
       }
   }
 }

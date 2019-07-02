@@ -223,7 +223,7 @@ AlignmentNode.propTypes = {
 
 export const FontSzieMark = (props) => {
     const { children, mark: { data } } = props
-    // console.log(props, 111)
+    console.log(props, 1121)
     return (
         <span
           style={{

@@ -5,11 +5,13 @@ import { connect } from 'react-redux';
 import { bindActionCreators } from 'redux';
 import PropTypes from 'prop-types';
 import Editor from '../slate'
+// import ColorPicker from '../slate/ColorPicker'
 
 class Discribtion extends Component {
     render () {
         return (
             <div styleName='discribtion' className='discribtion'>
+                {/* <ColorPicker /> */}
                 <div className='container'><Editor /></div>
             </div>
         );

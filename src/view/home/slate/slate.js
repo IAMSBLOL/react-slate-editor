@@ -5,14 +5,15 @@ import { css, cx } from 'emotion'
 import React from 'react'
 import './slate.module.scss'
 // import './font.css'
-import { Upload } from 'antd'
+import { Upload, Popover } from 'antd'
 import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
 import isUrl from 'is-url'
 import imageExtensions from 'image-extensions'
-import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontSzieNode } from './components'
+import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontSzieNode, FontColorMark, FontBackgroundColorMark } from './components'
 import { RULES } from './slateHtmlSerializer'
 import { TITLE_SIZE, FONT_SIZE } from './selectOption'
+import ColorPicker from './ColorPicker'
 // import PlaceholderPlugin from 'slate-react-placeholder'
 
 const serializer = new Html({ rules: RULES })
@@ -63,6 +64,15 @@ const schema = {
         image: {
             isVoid: true,
         },
+        'block-quote': {
+            text: function (t) {
+                // const __t = t.replace(/^\\\(|\\\)$/g, '');
+                const MATHJAX_REGEX = /\\\(.*?\\\)|\$\$.*?\$\$|\\\[.*?\\\]/g;
+                const _t = MATHJAX_REGEX.exec(t)
+                console.log(_t, t)
+                return t
+            }
+        }
     },
 }
 
@@ -149,11 +159,17 @@ class RichTextExample extends React.Component {
       return (
           <div className='slate-cjfed' styleName='slate-cjfed'>
               <Toolbar>
+                  {/** ---------------------谷歌垃圾字体飞机票------------- */}
+                  {/** ----https://material.io/tools/icons/?icon=format_color_fill&style=baseline----- */}
                   {this.renderHistoryButton('undo', 'undo', '上一步', this.onClickUndo)}
                   {this.renderHistoryButton('redo', 'redo', '下一步', this.onClickRedo)}
                   {this.renderMarkButton('bold', 'format_bold', '加粗')}
                   {this.renderMarkButton('italic', 'format_italic', '斜体')}
                   {this.renderMarkButton('underlined', 'format_underlined', '下划线')}
+                  {/** --------------------------------------------------------------------- */}
+                  {this.renderColorMarkButton('font-color', 'format_color_text', '字体颜色', '选择字体颜色')}
+                  {this.renderColorMarkButton('background-color', 'format_color_fill', '背景颜色', '选择背景颜色')}
+                  {/** --------------------------------------------------------------------- */}
                   {/* {this.renderMarkButton('code', 'code', '代码')} */}
                   {/* {this.renderBlockButton('heading-one', 'looks_one', '标题1')}
                   {this.renderBlockButton('heading-two', 'looks_two', '标题2')} */}
@@ -161,9 +177,10 @@ class RichTextExample extends React.Component {
                   {this.renderBlockButton('numbered-list', 'format_list_numbered', '有序列表')}
                   {this.renderBlockButton('bulleted-list', 'format_list_bulleted', '无序列表')}
                   {this.renderImageButton('image', 'image', '图片')}
-                  {this.renderRTLButton('left', 'image', '居左')}
-                  {this.renderRTLButton('center', 'image', '居中')}
-                  {this.renderRTLButton('right', 'image', '居右')}
+                  {this.renderRTLButton('left', 'format_align_left', '居左')}
+                  {this.renderRTLButton('center', 'format_align_justify', '居中')}
+                  {this.renderRTLButton('right', 'format_align_right', '居右')}
+                  {/** --------------------------------------------------------------------- */}
                   {this.renderSelect('title', '标题号', this.setTitle, TITLE_SIZE)}
                   {this.renderSelect('font-size', '字体大小', this.setFontSize, FONT_SIZE, 1)}
               </Toolbar>
@@ -186,6 +203,10 @@ class RichTextExample extends React.Component {
           </div>
       )
   }
+
+  /**
+   * --------------------------------------------------------按钮相关---------------------------------------------------------------------------
+   */
 
   /**
    *
@@ -260,13 +281,34 @@ class RichTextExample extends React.Component {
 
   /**
    *
+   */
+  renderColorMarkButton= (type, icon, remarks, title) => {
+      const isActive = this.hasMark(type)
+      const onComplete = type === 'font-color' ? this.setFontColorMark : this.setBackgroundColorMark
+      const content = <ColorPicker onComplete={onComplete} />
+      return (
+          <Popover title={title} content={content} overlayStyle={{ width: 250 }} getPopupContainer={(node) => {
+              return node
+          }}>
+              <Button
+                active={isActive}
+                onMouseDown={event => void 0}
+                >
+                  <Icon remarks={remarks}>{icon}</Icon>
+              </Button>
+          </Popover>
+      )
+  }
+
+  /**
+   *
    * @param {String} type
    * @param {String} icon
    * @return {Element}
    */
 
   renderRTLButton = (type, icon, remarks) => {
-      const isActive = this.hasMark(type)
+      let isActive = this.hasBlock(type)
 
       return (
           <Button
@@ -309,6 +351,13 @@ class RichTextExample extends React.Component {
   }
 
   /**
+   * 选择颜色的插件
+   */
+
+  /**
+   * --------------------------------------------------------富文本处理type相关---------------------------------------------------------------------------
+   */
+  /**
    * Render 处理slate格式.一整块
    *
    * @param {Object} props
@@ -317,7 +366,7 @@ class RichTextExample extends React.Component {
 
   renderBlock = (props, editor, next) => {
       const { attributes, children, node, isFocused } = props
-      console.log(props, 254)
+      //   console.log(props, 254)
       switch (node.type) {
           case 'block-quote':
               return <blockquote {...attributes}>{children}</blockquote>
@@ -351,7 +400,7 @@ class RichTextExample extends React.Component {
                       display: block;
                       max-width: 100%;
                       max-height: 20em;
-                      box-shadow: ${isFocused ? '0 0 0 2px blue;' : 'none'};
+                      box-shadow: ${isFocused ? '0 0 0 2px #ccc;' : 'none'};
                     `}
                   />
               )
@@ -382,10 +431,18 @@ class RichTextExample extends React.Component {
               return <u {...attributes}>{children}</u>
           case 'font-size':
               return <FontSzieMark {...props} />
+          case 'font-color':
+              return <FontColorMark {...props} />
+          case 'background-color':
+              return <FontBackgroundColorMark {...props} />
           default:
               return next()
       }
   }
+
+  /**
+   * --------------------------------------------------------各种事件相关---------------------------------------------------------------------------
+   */
 
   /**
    * On change, 保存~~更新 `value`.
@@ -612,6 +669,70 @@ class RichTextExample extends React.Component {
               type: 'font-size',
               data: { size },
           })
+      }
+  }
+
+  /**
+   * 设置字体颜色
+   */
+  setFontColorMark=(color) => {
+      const { editor } = this
+      const { value } = editor
+      const hasFontMark = value.marks.some(mark => mark.type === 'font-color')
+      const getFontMark = value.marks.filter(mark => mark.type === 'font-color').first()
+      const { selection } = value
+      console.log(selection, 'selection')
+
+      // 选中替换~~~自动替换的没开发出来
+      if (selection.isExpanded) {
+          if (hasFontMark) {
+              editor
+                  .removeMark(getFontMark)
+                  .addMark({
+                      type: 'font-color',
+                      data: { color },
+                  }).focus()
+          } else {
+              editor
+                  .addMark({
+                      type: 'font-color',
+                      data: { color },
+                  }).focus()
+          }
+      } else {
+
+      }
+  }
+
+  /**
+   * 设置段落背景颜色
+   */
+  setBackgroundColorMark=(backgroundColor) => {
+      const { editor } = this
+      const { value } = editor
+      const hasFontMark = value.marks.some(mark => mark.type === 'background-color')
+      const getFontMark = value.marks.filter(mark => mark.type === 'background-color').first()
+      const { selection } = value
+      console.log(selection, 'selection')
+
+      // 选中替换~~~自动替换的没开发出来
+      if (selection.isExpanded) {
+          if (hasFontMark) {
+              editor
+                  .removeMark(getFontMark)
+                  .addMark({
+                      type: 'background-color',
+                      data: { backgroundColor },
+                  }).focus()
+          } else {
+              editor
+                  .addMark({
+                      type: 'background-color',
+                      data: { backgroundColor },
+                  }).focus()
+          }
+      } else {
+          console.info('库里吉娃阿里嘎多')
       }
   }
 }

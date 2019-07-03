@@ -2,7 +2,7 @@ import React from 'react'
 import { cx, css } from 'emotion'
 import * as R from 'ramda'
 import PropTypes from 'prop-types';
-import { Popover, Select } from 'antd'
+import { Tooltip, Select } from 'antd'
 
 const { Option } = Select;
 
@@ -27,7 +27,7 @@ Button.propTypes = {
 
 export const SlateSelect = React.forwardRef(
     ({ remarks, data, defaultValue, ...props }, ref) => (
-        <Popover content={remarks} title=''>
+        <Tooltip content={remarks} title={remarks}>
             <Select
               {...props}
               ref={ref}
@@ -46,7 +46,7 @@ export const SlateSelect = React.forwardRef(
                     }, data)
                 }
             </Select>
-        </Popover>
+        </Tooltip>
     )
 )
 
@@ -118,7 +118,7 @@ EditorValue.propTypes = {
  */
 export const Icon = React.forwardRef(({ className, remarks = '-', ...props }, ref) => {
     return (
-        <Popover content={remarks} title=''>
+        <Tooltip content={remarks} title={remarks}>
             <span
               {...props}
               ref={ref}
@@ -131,7 +131,7 @@ export const Icon = React.forwardRef(({ className, remarks = '-', ...props }, re
                     `
               )}
                 />
-        </Popover>
+        </Tooltip>
     )
 })
 
@@ -245,8 +245,6 @@ FontSzieMark.propTypes = {
 export const FontSzieNode = (props) => {
     const { children, node: { data } } = props
     let Node = 'span'
-    // if (data.get('currentBlockType') === 'grid-cell') Node = 'td'
-    console.log(props, '249')
     return (
         <Node style={{ textAlign: `${data.get('size')}` }}>
             {children}
@@ -257,4 +255,34 @@ export const FontSzieNode = (props) => {
 FontSzieNode.propTypes = {
     children: PropTypes.any,
     node: PropTypes.any,
+}
+
+export const FontColorMark = (props) => {
+    const { children, mark: { data } } = props
+    let Node = 'span'
+    return (
+        <Node style={{ color: `${data.get('color')}` }}>
+            {children}
+        </Node>
+    )
+}
+
+FontColorMark.propTypes = {
+    children: PropTypes.any,
+    mark: PropTypes.any,
+}
+
+export const FontBackgroundColorMark = (props) => {
+    const { children, mark: { data } } = props
+    let Node = 'span'
+    return (
+        <Node style={{ backgroundColor: `${data.get('backgroundColor')}` }}>
+            {children}
+        </Node>
+    )
+}
+
+FontBackgroundColorMark.propTypes = {
+    children: PropTypes.any,
+    mark: PropTypes.any,
 }

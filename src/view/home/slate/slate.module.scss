@@ -21,6 +21,13 @@
             margin-right: 0;
             white-space: nowrap;
         }
+
+        .ant-popover-inner-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+        }
     }
 }
 

@@ -99,7 +99,7 @@ class RichTextExample extends React.Component {
    */
 
   state = {
-      value: Value.fromJSON(initialValue),
+      value: localStorage.getItem('content') ? serializer.deserialize(localStorage.getItem('content')) : Value.fromJSON(initialValue),
   }
 
   plugins = [
@@ -451,8 +451,8 @@ class RichTextExample extends React.Component {
    */
 
   onChange = ({ value }) => {
-      //   const content = serializer.serialize(value.toJSON())
-      //   localStorage.setItem('content', content)
+      const content = serializer.serialize(value.toJSON())
+      localStorage.setItem('content', content)
       this.setState({ value })
   }
 
@@ -639,7 +639,7 @@ class RichTextExample extends React.Component {
   /**
    * 设置字体mark
    */
-  setFontSize=(size) => {
+  setFontSize=(fontSize) => {
       const { editor } = this
       const { value } = editor
       const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
@@ -654,20 +654,20 @@ class RichTextExample extends React.Component {
                   .removeMark(getFontMark)
                   .addMark({
                       type: 'font-size',
-                      data: { size },
+                      data: { fontSize },
                   }).focus()
           } else {
               editor
                   .addMark({
                       type: 'font-size',
-                      data: { size },
+                      data: { fontSize },
                   }).focus()
           }
       } else {
           console.info('库里吉娃阿里嘎多')
           editor.setBlocks({
               type: 'font-size',
-              data: { size },
+              data: { fontSize },
           })
       }
   }

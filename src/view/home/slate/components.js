@@ -227,7 +227,7 @@ export const FontSzieMark = (props) => {
     return (
         <span
           style={{
-              fontSize: parseInt(data.get('size'), 10),
+              fontSize: parseInt(data.get('fontSize'), 10),
               //   verticalAlign: 'middle'
           }}
       >
@@ -246,7 +246,7 @@ export const FontSzieNode = (props) => {
     const { children, node: { data } } = props
     let Node = 'span'
     return (
-        <Node style={{ textAlign: `${data.get('size')}` }}>
+        <Node style={{ fontSize: `${data.get('fontSize')}` }}>
             {children}
         </Node>
     )

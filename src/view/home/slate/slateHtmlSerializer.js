@@ -32,7 +32,8 @@ export const MARK_TAGS = {
     em: 'italic',
     u: 'underlined',
     s: 'strikethrough',
-    code: 'code',
+    code: 'code'
+
 }
 
 /**
@@ -68,21 +69,79 @@ export const RULES = [
     },
     {
         deserialize (el, next) {
-            const mark = MARK_TAGS[el.tagName.toLowerCase()]
+            const tagName = el.tagName.toLowerCase()
+            if (tagName && tagName === 'span') {
+                // console.log(el.getAttribute('style'), 747474)
+                const styleString = el.getAttribute('style')
 
-            if (mark) {
-                return {
-                    object: 'mark',
-                    type: mark,
-                    nodes: next(el.childNodes),
-                    data: {
-                        style: el.getAttribute('style'),
+                if (String(styleString).includes('font-size')) {
+                    const mark = 'font-size'
+                    const data = {
+                        fontSize: String(styleString).split(':')[1]
+                    }
+                    console.log(String(styleString).split(':'), 888)
+                    return {
+                        object: 'mark',
+                        type: mark,
+                        nodes: next(el.childNodes),
+                        data: data
+                    }
+                }
+                if (String(styleString).includes('background-color')) {
+                    const mark = 'background-color'
+                    const data = {
+                        backgroundColor: String(styleString).split(':')[1]
+                    }
+                    return {
+                        object: 'mark',
+                        type: mark,
+                        nodes: next(el.childNodes),
+                        data: data
+                    }
+                }
+
+                if (String(styleString).includes('color')) {
+                    const mark = 'font-color'
+                    const data = {
+                        color: String(styleString).split(':')[1]
+                    }
+                    return {
+                        object: 'mark',
+                        type: mark,
+                        nodes: next(el.childNodes),
+                        data: data
+                    }
+                }
+            } else {
+                const mark = MARK_TAGS[tagName]
+                console.log(el)
+                if (mark) {
+                    return {
+                        object: 'mark',
+                        type: mark,
+                        nodes: next(el.childNodes),
+                        data: {
+                            style: el.getAttribute('style'),
+                        }
                     }
                 }
             }
         },
         serialize (object, children) {
-            const index = Object.values(MARK_TAGS).findIndex((n) => n === object.type)
+            const { type, data } = object
+
+            // console.log(object, 'serializeMARK')
+
+            if (['background-color', 'font-color', 'font-size'].includes(type)) {
+                const styles = {
+                    'background-color': { backgroundColor: data.backgroundColor },
+                    'font-color': { color: data.color },
+                    'font-size': { fontSize: data.fontSize }
+                }
+                return <span style={styles[type]}>{children}</span>
+            }
+
+            const index = Object.values(MARK_TAGS).findIndex((n) => n === type)
 
             if (object.object === 'mark' && index !== -1) {
                 const MARK_TAG = Object.keys(MARK_TAGS)[index]
@@ -129,7 +188,7 @@ export const RULES = [
         },
         serialize (object, children) {
             if (object.object === 'block' && object.type === 'image') {
-                return <img src={object.data.src}>{children}</img>
+                return <img src={object.data.src} />
             }
         }
     },

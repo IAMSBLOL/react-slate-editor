@@ -55,7 +55,7 @@ export const RULES = [
                     type: block,
                     nodes: next(el.childNodes),
                     data: {
-                        style: el.getAttribute('data-style') === null ? el.getAttribute('style') : el.getAttribute('data-style'),
+                        style: el.getAttribute('data-style') + ';' + el.getAttribute('style'),
                     }
                 }
             }

@@ -203,7 +203,6 @@ export const AlignmentNode = (props) => {
     const { children, node: { data } } = props
     let Node = 'div'
     if (data.get('currentBlockType') === 'grid-cell') Node = 'td'
-    // console.log(props, '999')
     return (
         <Node style={{ textAlign: `${data.get('align')}` }}>
             {children}
@@ -222,10 +221,11 @@ AlignmentNode.propTypes = {
  */
 
 export const FontSzieMark = (props) => {
-    const { children, mark: { data } } = props
+    const { children, mark: { data }, attributes } = props
     console.log(props, 1121)
     return (
         <span
+          {...attributes}
           style={{
               fontSize: parseInt(data.get('fontSize'), 10),
               //   verticalAlign: 'middle'
@@ -239,6 +239,7 @@ export const FontSzieMark = (props) => {
 FontSzieMark.propTypes = {
     children: PropTypes.any,
     mark: PropTypes.any,
+    attributes: PropTypes.any,
 
 }
 
@@ -258,10 +259,10 @@ FontSzieNode.propTypes = {
 }
 
 export const FontColorMark = (props) => {
-    const { children, mark: { data } } = props
+    const { children, mark: { data }, attributes } = props
     let Node = 'span'
     return (
-        <Node style={{ color: `${data.get('color')}` }}>
+        <Node style={{ color: `${data.get('color')}` }} {...attributes}>
             {children}
         </Node>
     )
@@ -270,19 +271,22 @@ export const FontColorMark = (props) => {
 FontColorMark.propTypes = {
     children: PropTypes.any,
     mark: PropTypes.any,
+    attributes: PropTypes.any,
 }
 
 export const FontBackgroundColorMark = (props) => {
-    const { children, mark: { data } } = props
-    let Node = 'span'
+    const { children, mark: { data }, attributes } = props
+    // let Node = 'span'
+    console.log(data.get('fontSize'), 'fontSize')
     return (
-        <Node style={{ backgroundColor: `${data.get('backgroundColor')}` }}>
+        <span style={{ backgroundColor: `${data.get('backgroundColor')}`, fontSize: data.get('fontSize') }} {...attributes}>
             {children}
-        </Node>
+        </span>
     )
 }
 
 FontBackgroundColorMark.propTypes = {
     children: PropTypes.any,
     mark: PropTypes.any,
+    attributes: PropTypes.any,
 }

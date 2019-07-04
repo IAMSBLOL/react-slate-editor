@@ -1,5 +1,6 @@
 // slate这种开放式的编程style是真的很free skr skr
 import React from 'react'
+import { css, cx } from 'emotion'
 /**
  * 标签 to blocks.
  *
@@ -48,12 +49,13 @@ export const RULES = [
             const block = BLOCK_TAGS[el.tagName.toLowerCase()]
 
             if (block) {
+                console.log(el.getAttribute('data-style'), 999)
                 return {
                     object: 'block',
                     type: block,
                     nodes: next(el.childNodes),
                     data: {
-                        style: el.getAttribute('style'),
+                        style: el.getAttribute('data-style') === null ? el.getAttribute('style') : el.getAttribute('data-style'),
                     }
                 }
             }
@@ -63,7 +65,11 @@ export const RULES = [
             const index = Object.values(BLOCK_TAGS).findIndex((n) => n === object.type)
             if (object.object === 'block' && index !== -1) {
                 const BLOCK_TAG = Object.keys(BLOCK_TAGS)[index]
-                return <BLOCK_TAG>{children}</BLOCK_TAG>
+                return <BLOCK_TAG className={cx(
+                    css`${object.data.style}`
+                )}
+                  data-style={object.data.style}
+                >{children}</BLOCK_TAG>
             }
         }
     },
@@ -77,9 +83,8 @@ export const RULES = [
                 if (String(styleString).includes('font-size')) {
                     const mark = 'font-size'
                     const data = {
-                        fontSize: String(styleString).split(':')[1]
+                        fontSize: el.style.fontSize
                     }
-                    console.log(String(styleString).split(':'), 888)
                     return {
                         object: 'mark',
                         type: mark,
@@ -89,8 +94,10 @@ export const RULES = [
                 }
                 if (String(styleString).includes('background-color')) {
                     const mark = 'background-color'
+                    // console.log(el.style, 'jiuinga')
                     const data = {
-                        backgroundColor: String(styleString).split(':')[1]
+                        backgroundColor: el.style.backgroundColor,
+                        // fontSize: el.style.fontSize
                     }
                     return {
                         object: 'mark',
@@ -103,7 +110,7 @@ export const RULES = [
                 if (String(styleString).includes('color')) {
                     const mark = 'font-color'
                     const data = {
-                        color: String(styleString).split(':')[1]
+                        color: el.style.color
                     }
                     return {
                         object: 'mark',
@@ -114,7 +121,7 @@ export const RULES = [
                 }
             } else {
                 const mark = MARK_TAGS[tagName]
-                console.log(el)
+                // console.log(el)
                 if (mark) {
                     return {
                         object: 'mark',
@@ -130,7 +137,7 @@ export const RULES = [
         serialize (object, children) {
             const { type, data } = object
 
-            // console.log(object, 'serializeMARK')
+            console.log(data, 'serializeMARK')
 
             if (['background-color', 'font-color', 'font-size'].includes(type)) {
                 const styles = {

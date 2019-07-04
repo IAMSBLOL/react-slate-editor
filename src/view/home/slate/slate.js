@@ -10,9 +10,9 @@ import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
 import isUrl from 'is-url'
 import imageExtensions from 'image-extensions'
-import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontSzieNode, FontColorMark, FontBackgroundColorMark } from './components'
+import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontColorMark, FontBackgroundColorMark } from './components'
 import { RULES } from './slateHtmlSerializer'
-import { TITLE_SIZE, FONT_SIZE } from './selectOption'
+import { TITLE_SIZE } from './selectOption' // FONT_SIZE
 import ColorPicker from './ColorPicker'
 // import PlaceholderPlugin from 'slate-react-placeholder'
 
@@ -182,7 +182,7 @@ class RichTextExample extends React.Component {
                   {this.renderRTLButton('right', 'format_align_right', '居右')}
                   {/** --------------------------------------------------------------------- */}
                   {this.renderSelect('title', '标题号', this.setTitle, TITLE_SIZE)}
-                  {this.renderSelect('font-size', '字体大小', this.setFontSize, FONT_SIZE, 1)}
+                  {/* {this.renderSelect('font-size', '字体大小', this.setFontSize, FONT_SIZE, 1)} */}
               </Toolbar>
               <Editor
                 spellCheck
@@ -373,23 +373,26 @@ class RichTextExample extends React.Component {
           case 'bulleted-list':
               return <ul {...attributes}>{children}</ul>
           case 'heading-one':
-              return <h1 {...attributes}>{children}</h1>
+              return <h1 {...attributes} className={cx(
+
+                  css`${node.data.get('style')}`
+              )}>{children}</h1>
           case 'heading-two':
-              return <h2 {...attributes}>{children}</h2>
+              return <h2 {...attributes} className={cx(
+
+                  css`${node.data.get('style')}`
+              )}>{children}</h2>
           case 'heading-three':
-              return <h3 {...attributes}>{children}</h3>
-          case 'heading-four':
-              return <h4 {...attributes}>{children}</h4>
-          case 'heading-five':
-              return <h5 {...attributes}>{children}</h5>
+              return <h3 {...attributes} className={cx(
+
+                  css`${node.data.get('style')}`
+              )}>{children}</h3>
           case 'list-item':
               return <li {...attributes}>{children}</li>
           case 'numbered-list':
               return <ol {...attributes}>{children}</ol>
           case 'alignment':
               return <AlignmentNode {...props} />
-          case 'font-size':
-              return <FontSzieNode {...props} />
           case 'image': {
               const src = node.data.get('src')
               return (
@@ -419,7 +422,7 @@ class RichTextExample extends React.Component {
 
   renderMark = (props, editor, next) => {
       const { children, mark, attributes } = props
-      console.log(props, 'props')
+      //   console.log(props, 'props')
       switch (mark.type) {
           case 'bold':
               return <strong {...attributes}>{children}</strong>
@@ -506,11 +509,18 @@ class RichTextExample extends React.Component {
       const { value } = editor
       //   const isActive = this.hasBlock(type)
       //   editor.setBlocks(isActive ? DEFAULT_NODE : type).wrapBlock(type)
-
-      editor.setBlocks({
-          type: 'alignment',
-          data: { align: type, currentBlockType: value.blocks.first().type }
-      }).focus()
+      const currentBlockType = value.blocks.first().type
+      if (['heading-one', 'heading-two', 'heading-three'].includes(currentBlockType)) {
+          editor.setBlocks({
+              type: currentBlockType,
+              data: { style: `text-align:${type};` }
+          })
+      } else {
+          editor.setBlocks({
+              type: 'alignment',
+              data: { align: type, currentBlockType }
+          }).focus()
+      }
   }
 
   /**
@@ -645,7 +655,7 @@ class RichTextExample extends React.Component {
       const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
       const getFontMark = value.marks.filter(mark => mark.type === 'font-size').first()
       const { selection } = value
-      console.log(selection, 'selection')
+      //   console.log(selection, 'selection')
 
       // 选中替换~~~自动替换的没开发出来
       if (selection.isExpanded) {
@@ -655,20 +665,19 @@ class RichTextExample extends React.Component {
                   .addMark({
                       type: 'font-size',
                       data: { fontSize },
-                  }).focus()
+                  })
           } else {
-              editor
-                  .addMark({
-                      type: 'font-size',
-                      data: { fontSize },
-                  }).focus()
+              editor.addMark({
+                  type: 'font-size',
+                  data: { fontSize },
+              })
           }
       } else {
           console.info('库里吉娃阿里嘎多')
-          editor.setBlocks({
-              type: 'font-size',
-              data: { fontSize },
-          })
+          //   editor.setBlocks({
+          //       type: 'font-size',
+          //       data: { fontSize },
+          //   })
       }
   }
 
@@ -681,7 +690,7 @@ class RichTextExample extends React.Component {
       const hasFontMark = value.marks.some(mark => mark.type === 'font-color')
       const getFontMark = value.marks.filter(mark => mark.type === 'font-color').first()
       const { selection } = value
-      console.log(selection, 'selection')
+      //   console.log(selection, 'selection')
 
       // 选中替换~~~自动替换的没开发出来
       if (selection.isExpanded) {
@@ -691,13 +700,13 @@ class RichTextExample extends React.Component {
                   .addMark({
                       type: 'font-color',
                       data: { color },
-                  }).focus()
+                  })
           } else {
               editor
                   .addMark({
                       type: 'font-color',
                       data: { color },
-                  }).focus()
+                  })
           }
       } else {
 
@@ -710,26 +719,31 @@ class RichTextExample extends React.Component {
   setBackgroundColorMark=(backgroundColor) => {
       const { editor } = this
       const { value } = editor
-      const hasFontMark = value.marks.some(mark => mark.type === 'background-color')
-      const getFontMark = value.marks.filter(mark => mark.type === 'background-color').first()
+      const hasBGMark = value.marks.some(mark => mark.type === 'background-color')
+      const getBGMark = value.marks.filter(mark => mark.type === 'background-color').first()
       const { selection } = value
-      console.log(selection, 'selection')
+
+      const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
+      const getFontMark = value.marks.filter(mark => mark.type === 'font-size').first()
+      console.log(hasFontMark, 'selection')
+      console.log(getFontMark, 'selection')
+      console.log(hasFontMark && getFontMark.data.get('fontSize'), 'selection')
 
       // 选中替换~~~自动替换的没开发出来
       if (selection.isExpanded) {
-          if (hasFontMark) {
+          if (hasBGMark) {
               editor
-                  .removeMark(getFontMark)
+                  .removeMark(getBGMark)
                   .addMark({
                       type: 'background-color',
-                      data: { backgroundColor },
-                  }).focus()
+                      data: { backgroundColor, fontSize: hasFontMark && getFontMark.data.get('fontSize') },
+                  })
           } else {
               editor
                   .addMark({
                       type: 'background-color',
-                      data: { backgroundColor },
-                  }).focus()
+                      data: { backgroundColor, fontSize: hasFontMark && getFontMark.data.get('fontSize') },
+                  })
           }
       } else {
           console.info('库里吉娃阿里嘎多')

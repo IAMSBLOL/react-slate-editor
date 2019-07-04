@@ -35,7 +35,7 @@ export const FONT_SIZE = [
 
 export const TITLE_SIZE = [
     {
-        key: 'block-quote',
+        key: 'paragraph',
         title: '正文'
     },
     {
@@ -49,13 +49,5 @@ export const TITLE_SIZE = [
     {
         key: 'heading-three',
         title: 'h3'
-    },
-    {
-        key: 'heading-four',
-        title: 'h4'
-    },
-    {
-        key: 'heading-five',
-        title: 'h5'
     }
 ]

@@ -4,6 +4,9 @@
    *
    */
 import { getEventTransfer } from 'slate-react'
+import Html from 'slate-html-serializer'
+import { RULES } from '../slateHtmlSerializer/slateHtmlSerializer'
+const serializer = new Html({ rules: RULES })
 function insertImage (editor, src, target) {
     if (target) {
         editor.select(target)
@@ -37,11 +40,11 @@ const onDropOrPaste = (event, editor, next) => {
         return
     }
     // 那就禁止自定义解析吧，垃圾
-    //   if (transfer.type === 'html') {
-    //       console.warn('html', transfer)
-    //       const { document } = serializer.deserialize(transfer.html)
-    //       editor.insertFragment(document)
-    //   }
+    if (transfer.type === 'html') {
+        console.warn('html', transfer)
+        const { document } = serializer.deserialize(transfer.html)
+        editor.insertFragment(document)
+    }
     // 很智障的问题，next会重新解析
     next()
 }

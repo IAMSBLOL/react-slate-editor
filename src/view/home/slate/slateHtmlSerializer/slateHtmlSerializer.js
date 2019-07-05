@@ -47,15 +47,15 @@ export const RULES = [
     {
         deserialize (el, next) {
             const block = BLOCK_TAGS[el.tagName.toLowerCase()]
-
+            // console.log('???', block)
             if (block) {
-                console.log(el.getAttribute('data-style'), 999)
+                console.log('???', block)
                 return {
                     object: 'block',
                     type: block,
                     nodes: next(el.childNodes),
                     data: {
-                        style: el.getAttribute('data-style') + ';' + el.getAttribute('style'),
+                        style: el.getAttribute('style'),
                     }
                 }
             }
@@ -65,11 +65,14 @@ export const RULES = [
             const index = Object.values(BLOCK_TAGS).findIndex((n) => n === object.type)
             if (object.object === 'block' && index !== -1) {
                 const BLOCK_TAG = Object.keys(BLOCK_TAGS)[index]
-                return <BLOCK_TAG className={cx(
-                    css`${object.data.style}`
-                )}
-                  data-style={object.data.style}
-                >{children}</BLOCK_TAG>
+                return (
+                    <BLOCK_TAG
+                      className={cx(
+                          css`${object.data.style}`
+                      )}
+                      data-style={object.data.style}
+                    >{children}</BLOCK_TAG>
+                )
             }
         }
     },
@@ -83,8 +86,9 @@ export const RULES = [
                 if (String(styleString).includes('font-size')) {
                     const mark = 'font-size'
                     const data = {
-                        fontSize: el.style.fontSize
+                        style: styleString
                     }
+
                     return {
                         object: 'mark',
                         type: mark,
@@ -94,9 +98,9 @@ export const RULES = [
                 }
                 if (String(styleString).includes('background-color')) {
                     const mark = 'background-color'
-                    // console.log(el.style, 'jiuinga')
+
                     const data = {
-                        backgroundColor: el.style.backgroundColor,
+                        style: styleString,
                         // fontSize: el.style.fontSize
                     }
                     return {
@@ -110,8 +114,9 @@ export const RULES = [
                 if (String(styleString).includes('color')) {
                     const mark = 'font-color'
                     const data = {
-                        color: el.style.color
+                        style: styleString
                     }
+
                     return {
                         object: 'mark',
                         type: mark,
@@ -122,13 +127,15 @@ export const RULES = [
             } else {
                 const mark = MARK_TAGS[tagName]
                 // console.log(el)
+
                 if (mark) {
+                    const styleString = el.getAttribute('style')
                     return {
                         object: 'mark',
                         type: mark,
                         nodes: next(el.childNodes),
                         data: {
-                            style: el.getAttribute('style'),
+                            style: styleString,
                         }
                     }
                 }
@@ -137,22 +144,28 @@ export const RULES = [
         serialize (object, children) {
             const { type, data } = object
 
-            console.log(data, 'serializeMARK')
-
             if (['background-color', 'font-color', 'font-size'].includes(type)) {
-                const styles = {
-                    'background-color': { backgroundColor: data.backgroundColor },
-                    'font-color': { color: data.color },
-                    'font-size': { fontSize: data.fontSize }
-                }
-                return <span style={styles[type]}>{children}</span>
+                return (
+                    <span
+                      className={cx(
+                          css`${data.style}`
+                      )}
+                      data-style={data.style}
+                      >
+                        {children}
+                    </span>
+                )
             }
 
             const index = Object.values(MARK_TAGS).findIndex((n) => n === type)
 
             if (object.object === 'mark' && index !== -1) {
                 const MARK_TAG = Object.keys(MARK_TAGS)[index]
-                return <MARK_TAG>{children}</MARK_TAG>
+                return <MARK_TAG
+                  className={cx(
+                      css`${object.data.style}`
+                  )}
+                  data-style={object.data.style}>{children}</MARK_TAG>
             }
         }
     },
@@ -203,20 +216,25 @@ export const RULES = [
         // Special case for links, to grab their href.
         deserialize (el, next) {
             if (el.tagName.toLowerCase() === 'a') {
+                console.log(el, 'aa')
                 return {
                     object: 'inline',
                     type: 'link',
                     nodes: next(el.childNodes),
                     data: {
                         href: el.getAttribute('href'),
+                        style: el.getAttribute('style')
                     },
                 }
             }
         },
         serialize (object, children) {
             if (object.object === 'inline' && object.type === 'link') {
-                return <a href={object.data.href}>{children}</a>
+                return <a href={object.data.href} data-style={object.data.style} className={cx(
+                    css`${object.data.style}`
+                )}>{children}</a>
             }
         }
     },
+
 ]

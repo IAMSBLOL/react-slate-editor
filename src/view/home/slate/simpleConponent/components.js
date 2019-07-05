@@ -204,7 +204,10 @@ export const AlignmentNode = (props) => {
     let Node = 'div'
     if (data.get('currentBlockType') === 'grid-cell') Node = 'td'
     return (
-        <Node style={{ textAlign: `${data.get('align')}` }}>
+        <Node className={cx(
+
+            css`${data.get('style')}`
+        )}>
             {children}
         </Node>
     )
@@ -226,10 +229,10 @@ export const FontSzieMark = (props) => {
     return (
         <span
           {...attributes}
-          style={{
-              fontSize: parseInt(data.get('fontSize'), 10),
-              //   verticalAlign: 'middle'
-          }}
+          className={cx(
+
+              css`${data.get('style')}`
+          )}
       >
             {children}
         </span>
@@ -247,7 +250,10 @@ export const FontSzieNode = (props) => {
     const { children, node: { data } } = props
     let Node = 'span'
     return (
-        <Node style={{ fontSize: `${data.get('fontSize')}` }}>
+        <Node className={cx(
+
+            css`${data.get('style')}`
+        )}>
             {children}
         </Node>
     )
@@ -262,7 +268,10 @@ export const FontColorMark = (props) => {
     const { children, mark: { data }, attributes } = props
     let Node = 'span'
     return (
-        <Node style={{ color: `${data.get('color')}` }} {...attributes}>
+        <Node className={cx(
+
+            css`${data.get('style')}`
+        )} {...attributes}>
             {children}
         </Node>
     )
@@ -277,9 +286,12 @@ FontColorMark.propTypes = {
 export const FontBackgroundColorMark = (props) => {
     const { children, mark: { data }, attributes } = props
     // let Node = 'span'
-    console.log(data.get('fontSize'), 'fontSize')
+    // console.log(data.get('fontSize'), 'fontSize')
     return (
-        <span style={{ backgroundColor: `${data.get('backgroundColor')}`, fontSize: data.get('fontSize') }} {...attributes}>
+        <span className={cx(
+
+            css`${data.get('style')}`
+        )} {...attributes}>
             {children}
         </span>
     )

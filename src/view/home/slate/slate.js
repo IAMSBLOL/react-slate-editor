@@ -3,16 +3,16 @@ import Html from 'slate-html-serializer'
 import { Value, Block } from 'slate'
 import { css, cx } from 'emotion'
 import React from 'react'
-import './slate.module.scss'
+import './slateCss/slate.module.scss'
 // import './font.css'
 import { Upload, Popover } from 'antd'
 import initialValue from './value.json'
 import { isKeyHotkey } from 'is-hotkey'
 import isUrl from 'is-url'
 import imageExtensions from 'image-extensions'
-import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontColorMark, FontBackgroundColorMark } from './components'
-import { RULES } from './slateHtmlSerializer'
-import { TITLE_SIZE } from './selectOption' // FONT_SIZE
+import { Button, Icon, Toolbar, AlignmentNode, SlateSelect, FontSzieMark, FontColorMark, FontBackgroundColorMark } from './simpleConponent/components'
+import { RULES } from './slateHtmlSerializer/slateHtmlSerializer'
+import { TITLE_SIZE } from './constant/selectOption' // FONT_SIZE
 import ColorPicker from './ColorPicker'
 // import PlaceholderPlugin from 'slate-react-placeholder'
 
@@ -107,12 +107,7 @@ class RichTextExample extends React.Component {
           queries: {
               isEmpty: editor => editor.value.document.text === '',
           },
-      },
-      //   PlaceholderPlugin({
-      //       placeholder: '请输入点东西!',
-      //       when: 'isEmpty',
-      //       style: { color: '#999', opacity: '1', fontFamily: 'monospace' },
-      //   }),
+      }
   ]
 
   /**
@@ -371,7 +366,7 @@ class RichTextExample extends React.Component {
           case 'block-quote':
               return <blockquote {...attributes}>{children}</blockquote>
           case 'bulleted-list':
-              return <ul {...attributes}>{children}</ul>
+              return <ul {...attributes} >{children}</ul>
           case 'heading-one':
               return <h1 {...attributes} className={cx(
 
@@ -387,11 +382,13 @@ class RichTextExample extends React.Component {
 
                   css`${node.data.get('style')}`
               )}>{children}</h3>
+
           case 'list-item':
               return <li {...attributes}>{children}</li>
           case 'numbered-list':
               return <ol {...attributes}>{children}</ol>
           case 'alignment':
+              // 注意的是，这个是普通文本的对齐，至于特定的比如h1之类的有独特处理
               return <AlignmentNode {...props} />
           case 'image': {
               const src = node.data.get('src')
@@ -454,7 +451,7 @@ class RichTextExample extends React.Component {
    */
 
   onChange = ({ value }) => {
-      const content = serializer.serialize(value.toJSON())
+      const content = serializer.serialize(value.toJSON()).replace(/data-style/g, 'style')
       localStorage.setItem('content', content)
       this.setState({ value })
   }
@@ -510,17 +507,21 @@ class RichTextExample extends React.Component {
       //   const isActive = this.hasBlock(type)
       //   editor.setBlocks(isActive ? DEFAULT_NODE : type).wrapBlock(type)
       const currentBlockType = value.blocks.first().type
-      if (['heading-one', 'heading-two', 'heading-three'].includes(currentBlockType)) {
-          editor.setBlocks({
-              type: currentBlockType,
-              data: { style: `text-align:${type};` }
-          })
-      } else {
-          editor.setBlocks({
-              type: 'alignment',
-              data: { align: type, currentBlockType }
-          }).focus()
-      }
+      //   if (['heading-one', 'heading-two', 'heading-three'].includes(currentBlockType)) {
+      //       editor.setBlocks({
+      //           type: currentBlockType,
+      //           data: { style: `text-align:${type};` }
+      //       })
+      //   } else {
+      //       editor.setBlocks({
+      //           type: 'alignment',
+      //           data: { style: `text-align:${type};`, currentBlockType }
+      //       }).focus()
+      //   }
+      editor.setBlocks({
+          type: currentBlockType,
+          data: { style: `text-align:${type};` }
+      })
   }
 
   /**
@@ -619,18 +620,19 @@ class RichTextExample extends React.Component {
       }
 
       if (type === 'text') {
+          console.warn('text', transfer)
           if (!isUrl(text)) return next()
           if (!isImage(text)) return next()
           editor.command(insertImage, text, target)
           return
       }
-
-      if (transfer.type === 'html') {
-          console.warn('t', transfer)
-          const { document } = serializer.deserialize(transfer.html)
-          editor.insertFragment(document)
-      }
-
+      // 那就禁止自定义解析吧，垃圾
+      //   if (transfer.type === 'html') {
+      //       console.warn('html', transfer)
+      //       const { document } = serializer.deserialize(transfer.html)
+      //       editor.insertFragment(document)
+      //   }
+      // 很智障的问题，next会重新解析
       next()
   }
 
@@ -639,11 +641,9 @@ class RichTextExample extends React.Component {
    */
 
   setTitle=(type) => {
-      //   e.preventDefault()
-      //   console.log(999, type)
-      //   console.log(TAG, 888)
       const { editor } = this
-      editor.setBlocks(type).focus()
+      const isActive = this.hasBlock(type)
+      editor.setBlocks(isActive ? DEFAULT_NODE : type).focus()
   }
 
   /**
@@ -664,12 +664,12 @@ class RichTextExample extends React.Component {
                   .removeMark(getFontMark)
                   .addMark({
                       type: 'font-size',
-                      data: { fontSize },
+                      data: { style: `font-size:${fontSize}px` },
                   })
           } else {
               editor.addMark({
                   type: 'font-size',
-                  data: { fontSize },
+                  data: { style: `font-size:${fontSize}px` },
               })
           }
       } else {
@@ -699,13 +699,13 @@ class RichTextExample extends React.Component {
                   .removeMark(getFontMark)
                   .addMark({
                       type: 'font-color',
-                      data: { color },
+                      data: { style: `color:${color};` },
                   })
           } else {
               editor
                   .addMark({
                       type: 'font-color',
-                      data: { color },
+                      data: { style: `color:${color};` },
                   })
           }
       } else {
@@ -723,11 +723,11 @@ class RichTextExample extends React.Component {
       const getBGMark = value.marks.filter(mark => mark.type === 'background-color').first()
       const { selection } = value
 
-      const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
-      const getFontMark = value.marks.filter(mark => mark.type === 'font-size').first()
-      console.log(hasFontMark, 'selection')
-      console.log(getFontMark, 'selection')
-      console.log(hasFontMark && getFontMark.data.get('fontSize'), 'selection')
+      //   const hasFontMark = value.marks.some(mark => mark.type === 'font-size')
+      //   const getFontMark = value.marks.filter(mark => mark.type === 'font-size').first()
+      //   console.log(hasFontMark, 'selection')
+      //   console.log(getFontMark, 'selection')
+      //   console.log(hasFontMark && getFontMark.data.get('style'), 'selection')
 
       // 选中替换~~~自动替换的没开发出来
       if (selection.isExpanded) {
@@ -736,13 +736,13 @@ class RichTextExample extends React.Component {
                   .removeMark(getBGMark)
                   .addMark({
                       type: 'background-color',
-                      data: { backgroundColor, fontSize: hasFontMark && getFontMark.data.get('fontSize') },
+                      data: { style: `background-color:${backgroundColor};` },
                   })
           } else {
               editor
                   .addMark({
                       type: 'background-color',
-                      data: { backgroundColor, fontSize: hasFontMark && getFontMark.data.get('fontSize') },
+                      data: { style: `background-color:${backgroundColor};` },
                   })
           }
       } else {
